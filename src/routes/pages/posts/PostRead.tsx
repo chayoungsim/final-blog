@@ -14,7 +14,8 @@ export default function PostRead() {
   const {post, relatedPosts} : {post:Post; relatedPosts:Post[]} = useLoaderData();
   const user = useAuthStore((state) => state.user)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [comments, setComments] = useState(post.comments);
+  // loader 실패로 post가 null이어도 아래 "Post Not Found" 화면까지 도달하도록 안전하게 접근
+  const [comments, setComments] = useState<Comment[]>(post?.comments ?? []);
   const [optimisticComments, addOptimisticComments] = useOptimistic<Comment[], Comment>(comments,(comment, value) =>[...comment, value])
 
   const deletePost = async () => {
