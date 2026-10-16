@@ -17,6 +17,8 @@ export default function CommentForm({
   const [text, setText] = useState("");
 
   const handleCommentAdd = async () => {
+    // 빈 댓글은 낙관적 업데이트 전에 걸러냄
+    if(!text.trim()) return;
 
     addOptimisticComments({
       author: {
@@ -30,7 +32,6 @@ export default function CommentForm({
     } as Comment)
 
     try {
-      if(!text.trim()) return;
       const {data} = await axiosInstance.post(`/posts/${params.id}/comments`,{
         content:text,
       })
