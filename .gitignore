@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Serena MCP 설정/캐시
+.serena
