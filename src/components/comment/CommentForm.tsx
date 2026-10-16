@@ -7,9 +7,12 @@ import { axiosInstance } from "../../api/axios";
 export default function CommentForm({
   addOptimisticComments,
   setComments,
+  onAdded,
 }: {
   addOptimisticComments: (action: Comment) => void;
   setComments: Dispatch<SetStateAction<Comment[]>>;
+  // 등록 성공 후 호출 (상태 안내용)
+  onAdded?: () => void;
 }) {
   const params = useParams();
   const user = useAuthStore((state) => state.user);
@@ -40,6 +43,7 @@ export default function CommentForm({
       startTransition(() => {
         setComments((comments) => [...comments, data]);
       });
+      onAdded?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "unknown error");
     }

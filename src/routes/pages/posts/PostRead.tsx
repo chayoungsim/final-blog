@@ -1,4 +1,4 @@
-import { useOptimistic, useState } from "react";
+import { useOptimistic, useRef, useState } from "react";
 import { CalendarDays, Trash2, Pencil, Eye } from "lucide-react";
 import AdBanner from "../../../components/common/AdBanner";
 import PostGrid from "../../../components/post/PostGrid";
@@ -18,6 +18,10 @@ export default function PostRead() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // 댓글 영역 근처에 보여줄 오류와, 스크린리더용 처리 결과 안내
+  const [commentError, setCommentError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const commentsHeadingRef = useRef<HTMLHeadingElement>(null);
   // loader 실패로 post가 null이어도 아래 "Post Not Found" 화면까지 도달하도록 안전하게 접근
   const [comments, setComments] = useState<Comment[]>(post?.comments ?? []);
   const [optimisticComments, addOptimisticComments] = useOptimistic<
@@ -38,14 +42,18 @@ export default function PostRead() {
   };
 
   const deleteComment = async (commentId: string) => {
-    setErrorMessage("");
+    setCommentError("");
+    setStatusMessage("");
     try {
       await axiosInstance.delete(`/posts/${post._id}/comments/${commentId}`);
       setComments((comments) =>
         comments.filter((comment) => comment._id !== commentId),
       );
+      setStatusMessage("댓글이 삭제되었습니다.");
+      // 삭제된 댓글의 버튼이 사라지므로 댓글 제목으로 포커스를 옮긴다
+      commentsHeadingRef.current?.focus();
     } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : "unknown error");
+      setCommentError(e instanceof Error ? e.message : "unknown error");
     }
   };
 
@@ -163,14 +171,30 @@ export default function PostRead() {
         >
           <h2
             id="comments-heading"
-            className="mb-8 text-2xl font-bold text-white"
+            ref={commentsHeadingRef}
+            tabIndex={-1}
+            className="mb-8 text-2xl font-bold text-white focus:outline-hidden"
           >
             Comments ({optimisticComments.length})
           </h2>
 
+          {/* 댓글 등록·삭제 결과를 스크린리더에 알린다 */}
+          <p role="status" className="sr-only">
+            {statusMessage}
+          </p>
+          {commentError && (
+            <p
+              role="alert"
+              className="mb-4 rounded-lg bg-red-900/20 px-4 py-3 text-sm text-red-400"
+            >
+              {commentError}
+            </p>
+          )}
+
           <CommentForm
             addOptimisticComments={addOptimisticComments}
             setComments={setComments}
+            onAdded={() => setStatusMessage("댓글이 등록되었습니다.")}
           />
 
           <ul className="mt-8 space-y-6">
