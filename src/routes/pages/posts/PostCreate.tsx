@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ImagePlus, Loader2, X } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { axiosInstance } from "../../../api/axios";
 import { categories } from "../../../constants/categories";
@@ -18,6 +18,11 @@ const fieldClass =
   "w-full min-h-11 rounded-lg bg-card px-4 py-2.5 text-white placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent aria-invalid:ring-2 aria-invalid:ring-red-400";
 const labelClass = "mb-2 block text-sm font-medium text-slate-300";
 const errorClass = "mt-1 text-sm text-red-400";
+const requiredMark = (
+  <span aria-hidden="true" className="ml-1 text-red-400">
+    *
+  </span>
+);
 
 export default function PostCreate() {
   const navigate = useNavigate();
@@ -41,6 +46,24 @@ export default function PostCreate() {
 
   const [previewImage, setPreviewImage] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  // 오류 시 첫 필드로, 이미지 선택·제거 시 알맞은 요소로 포커스를 옮기기 위한 ref
+  const titleRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const removeButtonRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const focusAfterPreviewRef = useRef<"remove" | "input" | null>(null);
+
+  // 미리보기 전환으로 포커스된 요소가 사라졌을 때 포커스를 이어서 보낸다
+  useEffect(() => {
+    if (focusAfterPreviewRef.current === "remove") {
+      removeButtonRef.current?.focus();
+    } else if (focusAfterPreviewRef.current === "input") {
+      fileInputRef.current?.focus();
+    }
+    focusAfterPreviewRef.current = null;
+  }, [previewImage]);
 
   const handleChangeFormState = (
     e: React.ChangeEvent<
@@ -85,6 +108,7 @@ export default function PostCreate() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setErrorState((errorState) => ({ ...errorState, thumbnail: "" }));
+      focusAfterPreviewRef.current = "remove";
       setPreviewImage(reader.result as string);
     };
     reader.readAsDataURL(selectedFile);
@@ -92,6 +116,8 @@ export default function PostCreate() {
 
   const handleFormAction = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // 제출 버튼을 aria-disabled로 두었으므로 진행 중 중복 제출은 여기서 막는다
+    if (isPending) return;
     setSubmitError("");
     startTransition(async () => {
       try {
@@ -109,6 +135,11 @@ export default function PostCreate() {
 
         if (Object.keys(newErrors).length > 0) {
           setErrorState(newErrors);
+          // 첫 번째 오류 필드로 포커스 이동
+          if (newErrors.title) titleRef.current?.focus();
+          else if (newErrors.category) categoryRef.current?.focus();
+          else if (newErrors.thumbnail) fileInputRef.current?.focus();
+          else contentRef.current?.focus();
           return;
         }
 
@@ -174,19 +205,26 @@ export default function PostCreate() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
-      <title>Create a Post - Blog</title>
+      <title>{post ? "Edit Post - Blog" : "Create a Post - Blog"}</title>
       <h1 className="mb-8 text-3xl font-bold text-white">
         Write {post ? "Modify" : "New"} Post
       </h1>
 
       <form className="space-y-6" onSubmit={handleFormAction} noValidate>
+        <p className="text-sm text-muted">
+          <span aria-hidden="true" className="text-red-400">
+            *
+          </span>{" "}
+          표시는 필수 입력 항목입니다.
+        </p>
         <div>
           <label htmlFor="title" className={labelClass}>
-            Title
+            Title{requiredMark}
           </label>
           <input
             type="text"
             id="title"
+            ref={titleRef}
             name="title"
             className={fieldClass}
             placeholder="Enter post title"
@@ -205,10 +243,11 @@ export default function PostCreate() {
 
         <div>
           <label htmlFor="category" className={labelClass}>
-            Category
+            Category{requiredMark}
           </label>
           <select
             id="category"
+            ref={categoryRef}
             name="category"
             className={fieldClass}
             aria-required="true"
@@ -233,7 +272,7 @@ export default function PostCreate() {
 
         <div>
           <span id="thumbnail-label" className={labelClass}>
-            Featured Image
+            Featured Image{requiredMark}
           </span>
           {/* 이미지 선택 후 화면 (미리보기) */}
           {previewImage ? (
@@ -246,8 +285,12 @@ export default function PostCreate() {
               <button
                 type="button"
                 aria-label="이미지 제거"
+                ref={removeButtonRef}
                 className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-danger text-white transition-colors hover:bg-danger-hover"
-                onClick={() => setPreviewImage("")}
+                onClick={() => {
+                  focusAfterPreviewRef.current = "input";
+                  setPreviewImage("");
+                }}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -258,6 +301,7 @@ export default function PostCreate() {
               <input
                 type="file"
                 id="image"
+                ref={fileInputRef}
                 accept="image/png,image/jpeg,image/webp"
                 className="sr-only"
                 aria-labelledby="thumbnail-label"
@@ -292,10 +336,11 @@ export default function PostCreate() {
 
         <div>
           <label htmlFor="content" className={labelClass}>
-            Content
+            Content{requiredMark}
           </label>
           <textarea
             id="content"
+            ref={contentRef}
             name="content"
             className={`${fieldClass} min-h-80 resize-y`}
             placeholder="Write your post content here..."
@@ -324,21 +369,18 @@ export default function PostCreate() {
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={isPending}
-            aria-busy={isPending}
-            className="flex min-h-11 items-center justify-center rounded-lg bg-accent-solid px-6 py-2.5 font-medium text-white transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:opacity-50"
+            aria-disabled={isPending}
+            className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-accent-solid px-6 py-2.5 font-medium text-white transition-colors hover:bg-accent-solid-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           >
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                <span className="sr-only">처리 중</span>
-              </>
-            ) : post ? (
-              "Modify Post"
-            ) : (
-              "Publish Post"
+            {isPending && (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             )}
+            {post ? "Modify Post" : "Publish Post"}
           </button>
+          {/* 버튼 이름은 바꾸지 않고 진행 상태만 별도 live region으로 알린다 */}
+          <p role="status" className="sr-only">
+            {isPending ? "게시글을 저장하는 중입니다." : ""}
+          </p>
           <button
             type="button"
             className="min-h-11 rounded-lg bg-slate-700 px-6 py-2.5 font-medium text-white transition-colors hover:bg-slate-600"
