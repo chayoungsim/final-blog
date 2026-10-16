@@ -33,6 +33,7 @@ export default function DeleteConfirmModal({
   // ESC로 닫기, Tab 이동은 모달 안에서만 순환
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
+      if (isPending) return;
       onCancel();
       return;
     }
@@ -71,6 +72,10 @@ export default function DeleteConfirmModal({
         <p id={descriptionId} className="mb-6 text-slate-300">
           {description}
         </p>
+        {/* 진행 상태를 스크린리더에 알린다. 버튼은 aria-disabled라 포커스를 잃지 않는다 */}
+        <p role="status" className="sr-only">
+          {isPending ? "삭제 중입니다." : ""}
+        </p>
         {error && (
           <p role="alert" className="mb-4 text-sm text-red-400">
             {error}
@@ -80,19 +85,19 @@ export default function DeleteConfirmModal({
           <button
             ref={cancelRef}
             type="button"
-            onClick={onCancel}
-            disabled={isPending}
-            className="min-h-11 rounded-lg bg-slate-600 px-4 py-2 text-white transition-colors hover:bg-slate-500 disabled:opacity-50"
+            onClick={() => !isPending && onCancel()}
+            aria-disabled={isPending}
+            className="min-h-11 rounded-lg bg-slate-600 px-4 py-2 text-white transition-colors hover:bg-slate-500 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            disabled={isPending}
-            className="min-h-11 rounded-lg bg-danger px-4 py-2 text-white transition-colors hover:bg-danger-hover disabled:opacity-50"
+            onClick={() => !isPending && onConfirm()}
+            aria-disabled={isPending}
+            className="min-h-11 rounded-lg bg-danger px-4 py-2 text-white transition-colors hover:bg-danger-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           >
-            {isPending ? "Deleting..." : "Delete"}
+            Delete
           </button>
         </div>
       </div>
