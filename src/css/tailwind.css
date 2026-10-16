@@ -9,7 +9,11 @@
   /* 강조색: 기존 blue-500 유지, 링크·활성·포커스에 공통 사용 */
   --color-accent: var(--color-blue-500);
   --color-accent-hover: var(--color-blue-400);
-  --color-danger: var(--color-red-500);
+  /* 흰 글자가 올라가는 버튼·배지 배경: 흰색 대비 4.5:1 이상 확보 (blue-600 5.17, red-600 4.83) */
+  --color-accent-solid: var(--color-blue-600);
+  --color-accent-solid-hover: var(--color-blue-700);
+  --color-danger: var(--color-red-600);
+  --color-danger-hover: var(--color-red-700);
 
   /* 배경 3단 계층: 페이지 → 섹션 → 카드 */
   --color-page: var(--color-slate-950);
