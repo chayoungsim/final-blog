@@ -1,7 +1,7 @@
 import { Send } from "lucide-react";
 import { Dispatch, SetStateAction, startTransition, useState } from "react";
 import { useAuthStore } from "../../store/authStore";
-import { useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { axiosInstance } from "../../api/axios";
 
 export default function CommentForm({
@@ -12,7 +12,6 @@ export default function CommentForm({
   setComments: Dispatch<SetStateAction<Comment[]>>;
 }) {
   const params = useParams();
-  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
@@ -46,19 +45,30 @@ export default function CommentForm({
     }
   };
 
-  const handleFocus = () => {
-    if (!user) navigate("/auth/login");
-  };
+  // 포커스만으로 화면이 이동하면 안 되므로(WCAG 3.2.1) 비로그인 시 안내 링크를 보여준다
+  if (!user) {
+    return (
+      <p className="mt-4 rounded-xl bg-card p-4 text-slate-300">
+        댓글을 작성하려면{" "}
+        <Link
+          to="/auth/login"
+          className="font-medium text-accent-hover underline underline-offset-2 hover:text-white"
+        >
+          로그인
+        </Link>
+        이 필요합니다.
+      </p>
+    );
+  }
+
   return (
     <form className="mt-4" action={handleCommentAdd}>
       <div className="flex gap-4">
-        {user && (
-          <img
-            src={user.profileImage}
-            alt=""
-            className="h-10 w-10 shrink-0 rounded-full object-cover"
-          />
-        )}
+        <img
+          src={user.profileImage}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-full object-cover"
+        />
         <div className="min-w-0 flex-1">
           <label htmlFor="comment-content" className="sr-only">
             댓글 작성
@@ -66,22 +76,26 @@ export default function CommentForm({
           <textarea
             id="comment-content"
             placeholder={"Write a comment..."}
-            className="w-full resize-none rounded-xl bg-card px-4 py-2.5 text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full resize-none rounded-xl bg-card px-4 py-2.5 text-white placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent"
             rows={3}
             value={text}
+            aria-invalid={!!error}
+            aria-describedby={error ? "comment-error" : undefined}
             onChange={(e) => setText(e.target.value)}
-            onFocus={handleFocus}
           />
           {error && (
-            <p role="alert" className="mt-2 text-sm text-red-400">
+            <p
+              id="comment-error"
+              role="alert"
+              className="mt-2 text-sm text-red-400"
+            >
               {error}
             </p>
           )}
           <div className="mt-2 flex justify-end">
             <button
               type="submit"
-              className="flex min-h-11 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-muted"
-              disabled={!user}
+              className="flex min-h-11 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:bg-accent-hover"
             >
               <Send className="h-4 w-4" aria-hidden="true" />
               Comment
