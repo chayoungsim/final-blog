@@ -97,17 +97,22 @@ types/post.d.ts           # 전역 타입 (Post, Comment, Author, Pagination)
 - 이벤트 핸들러: `handleXxx`(`handleSearch`, `handlePageChange`), prop으로 내려가는 콜백은 `onXxx`(`onPageChange`) 또는 동사형(`deleteComment`).
 - loader: `fetchXxx`(데이터) / `requireAuth`, `redirectIfAuth`(가드). 불리언은 `isXxx`/`showXxx`. 빈 상태 컴포넌트는 `*Zero`.
 
-## 일관성 없는 부분 (수정 시 주의 / 개선 후보)
+## 일관성 없는 부분과 신규 작업 기준
 
-1. **폼 제출 방식 혼재**: `action={fn}`(EmailLogin 등) vs `onSubmit` + `preventDefault`(PostCreate).
-2. **에러 처리 혼재**: `alert(e.message)`(PostRead, CommentForm) / `setError`로 화면 표시(EmailLogin) / `console.error` + 한글 `alert`(PostCreate) / loader는 조용히 삼킴. 문구 오타도 섞여 있다(`unknow error` vs `unknown error`, "must e at least").3. **`_id` ↔ `id` 변환 중복**: 서버 응답 → `User` 매핑 객체를 `EmailLogin`, `Kakao`에서 각각 손으로 작성한다. 비교는 `author._id === user?.id`.
-4. **토큰 접근 산재**: `sessionStorage.getItem/setItem("access_token")`이 axios, loader, Kakao, EmailLogin, store에 흩어져 있고 키 상수가 없다. `logout`은 `immer set` 콜백 안에서 `sessionStorage`를 건드리고, 타입은 `() => void`인데 실제로는 async다. `isLogin`은 `user` 유무와 중복.
-5. **loader 실패 반환값 불일치**: `fetchOverview`는 빈 기본값, `fetchPostsDetail`은 `{post: null,...}`, `fetchPosts`/`fetchPostModify`는 undefined. loader 이름도 `fetchuserData`(소문자 u), `fetchPostsDetail` vs `fetchPostModify`로 불규칙.
-6. **다크 모드 스타일 혼재**: 대부분 다크 색을 하드코딩(`bg-slate-800`)하는데 `Pagination`, `Posts`, `AuthProfile`, `ErrorState`만 `bg-gray-100 dark:bg-slate-800` 식의 `dark:` 변형을 쓴다. 다크 모드 토글이 없어 OS 설정에 따라 이 컴포넌트들만 밝게 보일 수 있다.
-7. **중복 상수/로직**: 카테고리 목록이 `Posts.tsx`(하드코딩 option)와 `PostCreate.tsx`(배열)에 각각 있고, 날짜 포맷 문자열과 Cloudinary 주소/preset도 하드코딩이다. `Header`의 검색어는 `encodeURIComponent` 없이 URL에 붙인다.
-8. **네이밍**: `CommentComponent`만 `Component` 접미사, 삭제 핸들러는 `handle` 접두사 없이 `deletePost`/`deleteComment`, 라우트 루트 컴포넌트명이 `Route`(react-router와 혼동), 파일 `NotFound.tsx` ↔ 컴포넌트 `NotFoundPage`.
-9. **들여쓰기/포맷**: 대부분 2칸이지만 `Pagination.tsx`는 4칸. 세미콜론·따옴표·공백도 파일마다 다르다. import는 `../../../../` 식 상대 경로이고 alias가 없다.
-10. **접근성 누락**: 일부 `<img>`에 `alt`가 없거나 고정 문구(`PostCard`는 모든 카드가 동일한 alt), 삭제 모달에 `role="dialog"`/포커스 관리 없음, 아이콘만 있는 버튼에 `aria-label` 없음, `Pagination`/`Header` 버튼에 `type`·`aria-current` 없음.
+**원칙**: 기존 코드는 일관성 목적만으로 수정하지 않는다. 신규 코드는 아래 "신규 기준"을 따르고, 어차피 수정하는 파일에서만 해당 부분을 함께 맞춘다. (2, 6번 기준은 제안 단계로 미확정)
+
+1. **폼 제출 방식 혼재** — `action={fn}`(EmailLogin, Kakao, CommentForm) / `useActionState`(Signup) / `onSubmit`+`preventDefault`(PostCreate). **신규 기준**: 현상 유지, 3가지 모두 허용. 수정하는 파일 또는 인접 파일의 패턴을 따른다.
+2. **에러 처리 혼재** — `alert(e.message)`(PostRead, CommentForm) / `setError` 화면 표시(EmailLogin) / `console.error`+한글 `alert`(PostCreate) / loader는 조용히 삼킴. 문구 오타(`unknow error` vs `unknown error`, "must e at least"). **신규 기준**: 폼은 화면 인라인 에러(`role="alert"`), 문구는 `unknown error`.
+3. **`_id` ↔ `id` 변환 중복** — 서버 응답 → `User` 매핑을 `EmailLogin`, `Kakao`에서 각각 작성. 비교는 `author._id === user?.id`. **신규 기준**: 매핑을 새로 복붙하지 말고 헬퍼로 분리.
+4. **토큰 접근 산재** — `sessionStorage` `"access_token"`이 axios, loader, Kakao, EmailLogin, store에 흩어져 있고 키 상수가 없다. `logout`은 `immer set` 안에서 `sessionStorage`를 건드리고 타입은 `() => void`인데 실제로는 async. `isLogin`은 `user`와 중복. **신규 기준**: 키 문자열을 새로 쓰지 말고, 접근이 필요하면 헬퍼 도입을 먼저 제안.
+5. **loader 실패 반환값 불일치** — `fetchOverview`는 빈 기본값, `fetchPostsDetail`은 `{post: null,...}`, `fetchPosts`/`fetchPostModify`는 undefined. 이름도 `fetchuserData`(소문자 u) 등 불규칙. **신규 기준**: throw하지 않고 빈 기본값 반환(`fetchOverview` 방식).
+6. **다크 모드 스타일 혼재** — 대부분 `bg-slate-800` 하드코딩인데 `Pagination`, `Posts`, `AuthProfile`, `ErrorState`만 `dark:` 변형을 써서, 다크 토글이 없어 OS 설정에 따라 이 컴포넌트들만 밝게 보일 수 있다. **신규 기준**: 앱이 다크 고정이므로 `dark:` 없이 slate 색을 직접 사용.
+7. **중복 상수/로직** — 카테고리 목록이 `Posts.tsx`와 `PostCreate.tsx`에 각각 있고, 날짜 포맷·Cloudinary 주소/preset이 하드코딩. `Header` 검색어는 `encodeURIComponent` 없이 URL에 붙임. **신규 기준**: 상수는 한 곳에 정의, 쿼리 값은 `encodeURIComponent`.
+8. **네이밍** — `CommentComponent`만 `Component` 접미사, 삭제 핸들러는 `deletePost`/`deleteComment`(handle 없음), 루트 컴포넌트명 `Route`(react-router와 혼동), 파일 `NotFound.tsx` ↔ 컴포넌트 `NotFoundPage`. **신규 기준**: 핸들러 `handleXxx`, `Component` 접미사 금지, 파일명=컴포넌트명.
+9. **들여쓰기/포맷** — 대부분 2칸이지만 `Pagination.tsx`는 4칸. 세미콜론·따옴표·공백이 파일마다 다르고 import는 `../../../../` 상대 경로(alias 없음). **신규 기준**: 2칸, 수정 파일의 기존 스타일 유지.
+10. **접근성 누락** — `alt` 없음/고정 문구(`PostCard`), 삭제 모달 `role="dialog"`·포커스 관리 없음, 아이콘 버튼 `aria-label` 없음, `Pagination`/`Header` 버튼 `type`·`aria-current` 없음. **신규 기준**: 위 항목을 신규 코드에서는 필수로 지킨다.
+
+**알려진 이슈(미수정)**: `Signup.tsx`는 `status === 201`에서 `navigate`한 뒤에도 `return {error: "Signup failed"}`로 떨어져 성공 후 에러 상태를 반환한다.
 
 ## 컨벤션 / 작업 규칙
 
