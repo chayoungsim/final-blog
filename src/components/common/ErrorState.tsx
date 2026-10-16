@@ -24,21 +24,28 @@ export default function ErrorState({
     message = `${error.name}: ${error.message}`;
   }
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900">
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-6 mb-6">
-          <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-page">
+      <div
+        role="alert"
+        className="flex flex-col items-center justify-center py-16 px-4"
+      >
+        <div className="bg-red-900/20 rounded-full p-6 mb-6">
+          <AlertCircle
+            aria-hidden="true"
+            className="w-12 h-12 text-red-400"
+          />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+        <h2 className="text-2xl font-bold text-white mb-2 text-center">
           {title}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md whitespace-pre-wrap">
+        <p className="text-muted text-center mb-6 max-w-md whitespace-pre-wrap">
           {message}
         </p>
         {action && (
           <button
+            type="button"
             onClick={action.onClick}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="min-h-11 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
           >
             {action.label}
           </button>
