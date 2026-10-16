@@ -21,7 +21,7 @@ export default function PostGrid({
         <h2 className="text-2xl font-bold text-white">{title}</h2>
         <Link
           to={viewAllPosts}
-          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          className="inline-flex min-h-11 items-center text-sm text-accent-hover hover:text-white transition-colors"
         >
           View All Post
         </Link>
