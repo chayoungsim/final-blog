@@ -1,1 +1,62 @@
 @import "tailwindcss";
+
+/* 디자인 토큰: 폰트 */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system,
+    "Segoe UI", "Noto Sans KR", sans-serif;
+  --font-display: "Noto Serif KR", "Pretendard Variable", Georgia, serif;
+
+  /* 강조색: 기존 blue-500 유지, 링크·활성·포커스에 공통 사용 */
+  --color-accent: var(--color-blue-500);
+  --color-accent-hover: var(--color-blue-400);
+  --color-danger: var(--color-red-500);
+
+  /* 배경 3단 계층: 페이지 → 섹션 → 카드 */
+  --color-page: var(--color-slate-950);
+  --color-section: var(--color-slate-900);
+  --color-card: var(--color-slate-800);
+
+  /* 글자색: 본문 / 보조 */
+  --color-body: var(--color-slate-200);
+  --color-muted: var(--color-slate-400);
+
+  /* 큰 영역 모서리 */
+  --radius-xl: 0.75rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 제목은 디스플레이 폰트 */
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+
+  /* 키보드 포커스 링: 모든 인터랙티브 요소 공통 */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* 모션 감소 설정 시 전환·애니메이션 비활성화 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
