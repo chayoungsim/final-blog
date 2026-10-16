@@ -31,10 +31,14 @@ axiosInstance.interceptors.response.use(
         sessionStorage.setItem("access_token", res.data.accessToken);
         return axiosInstance(originalRequest)
       } catch(refreshError) {
+        retry = false;
         sessionStorage.removeItem("access_token");
-        await axiosInstance.post("/auth/logout");
+        // 로그아웃 요청이 실패해도 원래 에러를 전달하도록 무시
+        await axiosInstance.post("/auth/logout").catch(() => {});
         return Promise.reject(refreshError)
-      } 
+      }
     }
+    // 401 외의 에러(CORS, 네트워크, 500 등)는 호출한 쪽에서 처리하도록 그대로 전달
+    return Promise.reject(error);
   }
 )

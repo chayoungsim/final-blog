@@ -8,6 +8,8 @@ export const fetchOverview = async () => {
     return data;
   } catch(e) {
     console.error(e)
+    // 요청 실패 시에도 Home 화면이 깨지지 않도록 빈 기본값 반환
+    return { latestPosts: [], popularPosts: [], randomPost: null };
   }
 }
 
