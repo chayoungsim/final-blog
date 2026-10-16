@@ -16,11 +16,11 @@ export default function FeaturedPost({post}: {post:Post}) {
             {post.category}
           </span>
         </div>
-        <Link to={`/post/${post._id}`}>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4">
+          <Link to={`/post/${post._id}`} className="rounded">
             {post.title}
-          </h1>
-        </Link>
+          </Link>
+        </h2>
         <div className="flex items-center">
           <img
             src={post.author.profileImage}

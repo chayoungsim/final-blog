@@ -10,7 +10,11 @@ export default function PostCard({
   author,
   createdAt,
   viewCount,
-}: Post) {
+  headingLevel: Heading = "h2",
+}: Post & {
+  // 목록 페이지는 h2, 섹션 제목(h2) 아래에 놓일 때는 h3을 쓴다
+  headingLevel?: "h2" | "h3";
+}) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-lg transition-transform duration-300 motion-safe:hover:-translate-y-1 hover:shadow-xl">
       <div className="relative aspect-video overflow-hidden">
@@ -28,14 +32,14 @@ export default function PostCard({
         </span>
       </div>
       <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <h2 className="line-clamp-2 text-lg font-bold text-white">
+        <Heading className="line-clamp-2 text-lg font-bold text-white">
           <Link
             to={`/post/${_id}`}
             className="rounded transition-colors hover:text-accent-hover"
           >
             {title}
           </Link>
-        </h2>
+        </Heading>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <div className="flex items-center gap-2">
             <img
