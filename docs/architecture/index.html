@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아키텍처 다이어그램</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1e293b; --muted: #64748b; --card: #f8fafc;
+    --border: #e2e8f0; --accent: #2563eb; --code-bg: #e2e8f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --card: #1e293b;
+      --border: #334155; --accent: #60a5fa; --code-bg: #334155;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg); line-height: 1.7;
+    font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  }
+  header, main { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 32px; }
+  h1 { font-size: 1.75rem; margin: 0 0 8px; }
+  h2 { font-size: 1.4rem; margin: 48px 0 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; margin: 32px 0 8px; }
+  p { margin: 8px 0; color: var(--muted); }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: .9em; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 16px 0 0; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  nav a { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .diagram {
+    margin: 16px 0; padding: 16px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 8px; overflow-x: auto;
+  }
+  .diagram pre.mermaid { margin: 0; text-align: center; font-family: inherit; }
+  .diagram svg { max-width: none; height: auto; }
+  .hint { font-size: .85rem; color: var(--muted); }
+  footer { max-width: 1200px; margin: 48px auto; padding: 0 16px; font-size: .85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>아키텍처 다이어그램</h1>
+  <p class="hint">docs/architecture/architecture.md 에서 생성됨 · Mermaid는 CDN에서 불러오므로 인터넷 연결이 필요합니다.</p>
+  <nav aria-label="목차">
+    <a href="#s1">1. 라우트와 loader 구조</a>
+    <a href="#s2">2. 인증 흐름</a>
+    <a href="#s6">3. 게시글 데이터 흐름</a>
+    <a href="#s8">4. 계층 구조 요약</a>
+    <a href="#s9">5. 컴포넌트 의존성</a>
+    <a href="#s12">6. 상태 흐름</a>
+  </nav>
+</header>
+<main>
+<p>GitHub에서 열면 Mermaid가 자동으로 렌더링된다. VS Code에서는 Markdown Preview Mermaid Support 확장이 필요하다.<br>코드가 바뀌면 <code>CLAUDE.md</code>의 아키텍처 설명과 함께 갱신한다.</p>
+<h2 id="s1">1. 라우트와 loader 구조</h2>
+<p>모든 라우트는 <code>Default</code> 레이아웃의 children이며, 레이아웃 loader가 앱 시작 시 사용자 정보를 복원한다.<br>가드 loader(<code>requireAuth</code>, <code>redirectIfAuth</code>)는 <code>sessionStorage</code>의 <code>access_token</code> 유무만 확인한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  R["createBrowserRouter&lt;br/&gt;routes/index.tsx"] --&gt; D["Default 레이아웃&lt;br/&gt;Header · Outlet · Footer"]
+  D -. "loader" .-&gt; U["fetchuserData&lt;br/&gt;GET /auth/me 로 user 복원"]
+  U --&gt; S[("authStore&lt;br/&gt;Zustand")]
+
+  D --&gt; H["/ · Home"]
+  D --&gt; PL["/posts · Posts"]
+  D --&gt; PR["/post/:id · PostRead"]
+  D --&gt; PC["/create-post · PostCreate"]
+  D --&gt; PE["/edit/:id · PostCreate"]
+  D --&gt; L["/auth/login · Login"]
+  D --&gt; EL["/auth/email-login · EmailLogin"]
+  D --&gt; SU["/auth/signup · Signup"]
+  D --&gt; K["/auth/callback/kakao · Kakao"]
+  D --&gt; NF["* · NotFound"]
+
+  H -. "loader" .-&gt; fo["fetchOverview"]
+  PL -. "loader" .-&gt; fp["fetchPosts"]
+  PR -. "loader" .-&gt; fd["fetchPostsDetail"]
+  PE -. "loader" .-&gt; fm["fetchPostModify"]
+  PC -. "loader" .-&gt; ra["requireAuth"]
+  PE -. "내부 호출" .-&gt; ra
+  L -. "loader" .-&gt; ria["redirectIfAuth"]
+  EL -. "loader" .-&gt; ria
+  SU -. "loader" .-&gt; ria
+  K -. "loader" .-&gt; ria
+
+  ra -- "토큰 없음" --&gt; L
+  ria -- "토큰 있음" --&gt; H
+</pre>
+</div>
+<h2 id="s2">2. 인증 흐름</h2>
+<h3 id="s3">2-1. 카카오 로그인</h3>
+<div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  actor User as 사용자
+  participant Login as Login.tsx
+  participant API as 백엔드 API
+  participant Kakao as Kakao.tsx
+  participant Store as authStore
+
+  User-&gt;&gt;Login: 카카오 로그인 클릭
+  Login-&gt;&gt;API: window.location.href = /auth/kakao
+  API--&gt;&gt;Kakao: 리다이렉트 /auth/callback/kakao?access_token=...&amp;email=Y|N
+  alt email=N
+    Kakao-&gt;&gt;User: 이메일 입력 폼 표시
+    User-&gt;&gt;Kakao: 이메일 제출
+    Kakao-&gt;&gt;API: PATCH /auth/update-email
+    API--&gt;&gt;Kakao: user
+    Kakao-&gt;&gt;Store: setUserData(user)
+    Kakao-&gt;&gt;User: 홈(/)으로 이동
+  else email=Y
+    Kakao-&gt;&gt;Kakao: sessionStorage에 access_token 저장
+    Kakao-&gt;&gt;API: GET /auth/me
+    alt 성공
+      API--&gt;&gt;Kakao: user
+      Kakao-&gt;&gt;Store: setUserData(user)
+      Kakao-&gt;&gt;User: 홈(/)으로 이동
+    else 실패
+      Kakao-&gt;&gt;Kakao: access_token 삭제
+      Kakao-&gt;&gt;User: /auth/login 으로 이동
+    end
+  end
+</pre>
+</div>
+<h3 id="s4">2-2. 토큰 자동 갱신 (axios 인터셉터)</h3>
+<p>401 응답 시 한 번만 refresh를 시도한다. 중복 방지는 모듈 전역 <code>retry</code> 플래그 하나로 처리한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  participant C as 컴포넌트 · loader
+  participant AX as axiosInstance
+  participant API as 백엔드 API
+
+  C-&gt;&gt;AX: 요청
+  AX-&gt;&gt;AX: 요청 인터셉터: Authorization Bearer 부착
+  AX-&gt;&gt;API: 요청
+  API--&gt;&gt;AX: 401
+  alt retry=false
+    AX-&gt;&gt;AX: retry = true
+    AX-&gt;&gt;API: POST /auth/refresh (쿠키)
+    alt refresh 성공
+      API--&gt;&gt;AX: accessToken
+      AX-&gt;&gt;AX: 토큰 저장 · retry = false
+      AX-&gt;&gt;API: 원래 요청 재시도
+      API--&gt;&gt;C: 응답
+    else refresh 실패
+      AX-&gt;&gt;AX: retry = false · 토큰 삭제
+      AX-&gt;&gt;API: POST /auth/logout (실패해도 무시)
+      AX--&gt;&gt;C: 에러 reject
+    end
+  else 401 외 에러 또는 retry=true
+    AX--&gt;&gt;C: 에러 reject
+  end
+</pre>
+</div>
+<h3 id="s5">2-3. 이메일 로그인 / 로그아웃</h3>
+<div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  subgraph login["이메일 로그인"]
+    A["EmailLogin.tsx"] -- "POST /auth/login" --&gt; B["accessToken · user"]
+    B --&gt; C["sessionStorage 저장"]
+    B --&gt; D["setUserData"]
+    D --&gt; E["홈(/)으로 이동"]
+  end
+  subgraph logout["로그아웃"]
+    F["AuthProfile · Sign out"] -- "POST /auth/logout" --&gt; G["store 초기화 · 토큰 삭제"]
+    G --&gt; H["revalidate 로 loader 재실행"]
+  end
+</pre>
+</div>
+<h2 id="s6">3. 게시글 데이터 흐름</h2>
+<p>필터·정렬·페이지·검색의 원천은 URL 쿼리다. 컴포넌트는 <code>useLoaderData()</code>로 읽기만 한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  U["URL 쿼리&lt;br/&gt;sort · category · page · search"] --&gt; LD["fetchPosts loader"]
+  LD -- "GET /posts?..." --&gt; API[("백엔드 API")]
+  API --&gt; LD
+  LD -- "useLoaderData()" --&gt; P["Posts 페이지"]
+  P --&gt; G["PostCard 목록"]
+  P --&gt; PG["Pagination"]
+  P --&gt; Z["PostZero&lt;br/&gt;결과 없음"]
+
+  P -- "정렬 · 카테고리 · 페이지 변경&lt;br/&gt;setSearchParams" --&gt; U
+  HD["Header 검색"] -- "navigate /posts?search=" --&gt; U
+</pre>
+</div>
+<h3 id="s7">게시글 상세와 쓰기 동작</h3>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  FD["fetchPostsDetail loader"] -- "GET /posts/:id&lt;br/&gt;GET /posts?category=..&amp;limit=3" --&gt; API[("백엔드 API")]
+  FD -- "post · relatedPosts" --&gt; PR["PostRead"]
+  PR --&gt; CF["CommentForm"]
+  PR --&gt; CC["CommentComponent"]
+  PR --&gt; PGD["PostGrid · 관련 글"]
+
+  CF -- "POST /posts/:id/comments&lt;br/&gt;useOptimistic 으로 먼저 표시" --&gt; API
+  CC -- "DELETE /posts/:id/comments/:commentId" --&gt; API
+  PR -- "삭제 DELETE /posts/:id" --&gt; API
+  PR -- "수정 버튼 navigate /edit/:id" --&gt; PE["PostCreate 수정 모드"]
+
+  PC["PostCreate"] -- "이미지 업로드&lt;br/&gt;일반 axios · Cloudinary" --&gt; CL[("Cloudinary")]
+  PC -- "작성 POST /posts&lt;br/&gt;수정 PUT /posts/:id" --&gt; API
+</pre>
+</div>
+<h2 id="s8">4. 계층 구조 요약</h2>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph ui["UI"]
+    pages["routes/pages"]
+    comps["components/{common, post, comment}"]
+  end
+  subgraph data["데이터"]
+    loaders["routes/loader"]
+    store["store/authStore"]
+    ax["api/axios · axiosInstance"]
+  end
+  types["types/post.d.ts&lt;br/&gt;전역 타입"]
+
+  pages --&gt; comps
+  pages -- "useLoaderData" --&gt; loaders
+  pages --&gt; store
+  comps --&gt; store
+  loaders --&gt; ax
+  loaders --&gt; store
+  pages --&gt; ax
+  comps --&gt; ax
+  store --&gt; ax
+  pages -.-&gt; types
+  comps -.-&gt; types
+</pre>
+</div>
+<h2 id="s9">5. 컴포넌트 의존성</h2>
+<h3 id="s10">5-1. 컴포넌트 포함 관계 (import 기준)</h3>
+<p>화살표는 "import해서 렌더링한다"는 뜻이다. <code>routes/index.tsx</code>는 <code>FullLoading</code>(로딩)과 <code>ErrorState</code>(에러)를 라우터 옵션으로 연결한다.<br><code>PostGrid</code>는 <code>Home</code>, <code>PostRead</code>에서 공유되고, <code>Posts</code>는 <code>PostGrid</code> 없이 <code>PostCard</code>를 직접 사용한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph pages["routes/pages · layouts"]
+    Default["Default 레이아웃"]
+    Home
+    Posts
+    PostRead
+    Kakao
+  end
+
+  subgraph common["components/common"]
+    Header
+    Footer
+    AuthProfile
+    AdBanner
+    Redirection
+    FullLoading
+    ErrorState
+  end
+
+  subgraph post["components/post"]
+    FeaturedPost
+    PostGrid
+    PostCard
+    PostMainZero
+    PostZero
+    Pagination
+  end
+
+  subgraph comment["components/comment"]
+    CommentForm
+    CommentComponent
+  end
+
+  Router["routes/index.tsx"] -- "HydrateFallback" --&gt; FullLoading
+  Router -- "errorElement" --&gt; ErrorState
+
+  Default --&gt; Header
+  Default --&gt; Footer
+  Header --&gt; AuthProfile
+
+  Home --&gt; FeaturedPost
+  Home --&gt; PostGrid
+  Home --&gt; AdBanner
+  PostGrid --&gt; PostCard
+  PostGrid --&gt; PostMainZero
+
+  Posts --&gt; PostCard
+  Posts --&gt; Pagination
+  Posts --&gt; PostZero
+  Posts --&gt; AdBanner
+
+  PostRead --&gt; PostGrid
+  PostRead --&gt; CommentForm
+  PostRead --&gt; CommentComponent
+  PostRead --&gt; AdBanner
+
+  Kakao --&gt; Redirection
+</pre>
+</div>
+<p>참고: <code>PostCardLoading</code> 컴포넌트는 어디에서도 import되지 않는다(미사용).</p>
+<h3 id="s11">5-2. 컴포넌트와 데이터 계층 의존성</h3>
+<p>UI 컴포넌트가 <code>authStore</code>와 <code>axiosInstance</code>를 어디서 직접 쓰는지 보여준다. 서비스 레이어가 없어서 페이지와 컴포넌트가 <code>axiosInstance</code>를 직접 호출한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  subgraph ui["UI"]
+    Header
+    AuthProfile
+    CommentForm
+    CommentComponent
+    PostRead
+    PostCreate
+    Kakao
+    EmailLogin
+    Signup
+  end
+
+  subgraph loader["routes/loader"]
+    authLoader["auth.loader"]
+    postLoader["post.loader"]
+  end
+
+  store[("authStore")]
+  ax["axiosInstance"]
+
+  Header --&gt; store
+  AuthProfile --&gt; store
+  CommentForm --&gt; store
+  CommentComponent --&gt; store
+  PostRead --&gt; store
+  Kakao --&gt; store
+  EmailLogin --&gt; store
+  authLoader --&gt; store
+
+  CommentForm --&gt; ax
+  PostRead --&gt; ax
+  PostCreate --&gt; ax
+  Kakao --&gt; ax
+  EmailLogin --&gt; ax
+  Signup --&gt; ax
+  authLoader --&gt; ax
+  postLoader --&gt; ax
+  store --&gt; ax
+  postLoader --&gt; authLoader
+</pre>
+</div>
+<h2 id="s12">6. 상태 흐름</h2>
+<h3 id="s13">6-1. 상태 종류별 위치</h3>
+<p>같은 정보를 여러 곳에 중복 보관하지 않는 것이 원칙이다. 서버 데이터는 loader, 화면 조건은 URL, 로그인 정보는 <code>authStore</code>, 그 외 UI 상태는 컴포넌트 <code>useState</code>에 둔다.<br>예외로 <code>PostRead</code>의 <code>comments</code>와 <code>PostCreate</code>의 <code>formState</code>는 loader 값을 로컬 state로 복사해서 쓴다.</p>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph server["① 서버 데이터 (loader → useLoaderData)"]
+    direction LR
+    L1["fetchOverview"] --&gt; C1["Home"]
+    L2["fetchPosts"] --&gt; C2["Posts"]
+    L3["fetchPostsDetail"] --&gt; C3["PostRead"]
+    L4["fetchPostModify"] --&gt; C4["PostCreate 수정 모드"]
+  end
+
+  subgraph url["② URL 상태 (useSearchParams)"]
+    direction LR
+    Q1["sort · category · page · search"] --&gt; C5["Posts&lt;br/&gt;읽기 · setSearchParams 로 변경"]
+    Q1 --&gt; C6["Header&lt;br/&gt;search 가 없으면 keyword 초기화"]
+    C7["Header 검색 입력"] -- "navigate /posts?search=" --&gt; Q1
+    Q2["access_token · email 콜백 쿼리"] --&gt; C8["Kakao"]
+  end
+
+  subgraph global["③ 전역 상태 (Zustand authStore)"]
+    direction LR
+    T[("sessionStorage&lt;br/&gt;access_token")] -. "토큰 있으면 user 복원" .-&gt; A[("authStore&lt;br/&gt;user · isLogin")]
+    A -- "셀렉터 구독" --&gt; C9["Header · AuthProfile&lt;br/&gt;CommentForm · CommentComponent · PostRead"]
+  end
+
+  subgraph local["④ 로컬 상태 (useState 등)"]
+    direction LR
+    S1["Header&lt;br/&gt;keyword · isSearchOpen"]
+    S2["PostRead&lt;br/&gt;comments · showDeleteConfirm"]
+    S3["PostCreate&lt;br/&gt;formState · errorState · previewImage"]
+    S4["Kakao · EmailLogin&lt;br/&gt;email · error · showForm"]
+  end
+
+  server ~~~ url
+  url ~~~ global
+  global ~~~ local
+</pre>
+</div>
+<h3 id="s14">6-2. authStore 상태 전이</h3>
+<p>로그인 여부는 <code>user</code>가 있는지로 결정되고, 새로고침해도 <code>sessionStorage</code>의 토큰이 있으면 레이아웃 loader(<code>fetchuserData</code>)가 복원한다.</p>
+<div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --&gt; 비로그인: 앱 시작 · 토큰 없음
+  [*] --&gt; 복원중: 앱 시작 · 토큰 있음
+
+  복원중 --&gt; 로그인: GET /auth/me 성공 후 setUserData
+  복원중 --&gt; 비로그인: 조회 실패 · user는 null 유지
+
+  비로그인 --&gt; 로그인: 이메일 로그인 성공 후 setUserData
+  비로그인 --&gt; 로그인: 카카오 콜백 성공 후 setUserData
+  비로그인 --&gt; 로그인: 카카오 이메일 등록 성공 후 setUserData
+
+  로그인 --&gt; 비로그인: logout 후 토큰 삭제 · revalidate
+  로그인 --&gt; 비로그인: refresh 실패 후 토큰 삭제
+</pre>
+</div>
+<h3 id="s15">6-3. 댓글 상태 (로컬 state + 낙관적 업데이트)</h3>
+<p><code>PostRead</code>가 loader의 <code>post.comments</code>를 <code>comments</code> state로 복사하고, <code>useOptimistic</code>으로 화면용 목록을 만든다. 서버 응답 전에는 임시 댓글이 보이고, 실패하면 자동으로 사라진다.</p>
+<div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  actor User as 사용자
+  participant CF as CommentForm
+  participant PR as PostRead
+  participant API as 백엔드 API
+
+  Note over PR: comments = loader post.comments 복사
+  Note over PR: optimisticComments = useOptimistic(comments)
+
+  User-&gt;&gt;CF: 댓글 입력 후 제출
+  CF-&gt;&gt;CF: 공백이면 중단
+  CF-&gt;&gt;PR: addOptimisticComments(임시 댓글)
+  PR--&gt;&gt;User: 임시 댓글을 즉시 표시
+  CF-&gt;&gt;API: POST /posts/:id/comments
+  alt 성공
+    API--&gt;&gt;CF: 저장된 댓글
+    CF-&gt;&gt;PR: setComments 로 목록에 추가 (startTransition)
+    PR--&gt;&gt;User: 실제 댓글로 교체
+  else 실패
+    CF-&gt;&gt;User: alert 로 에러 표시
+    PR--&gt;&gt;User: 임시 댓글 자동 제거
+  end
+
+  User-&gt;&gt;PR: 댓글 삭제 클릭
+  PR-&gt;&gt;API: DELETE /posts/:id/comments/:commentId
+  API--&gt;&gt;PR: 성공
+  PR-&gt;&gt;PR: setComments 에서 해당 댓글 제거
+</pre>
+</div>
+<h3 id="s16">6-4. PostCreate 폼 상태 (작성 · 수정 공용)</h3>
+<div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  LD["loader 데이터&lt;br/&gt;post 있으면 수정 모드"] --&gt; EF["useEffect&lt;br/&gt;formState · previewImage 채움"]
+  IN["입력 변경"] --&gt; FS["formState 갱신&lt;br/&gt;해당 필드 errorState 초기화"]
+  IMG["이미지 선택"] --&gt; CHK{"확장자 · 10MB 검사"}
+  CHK -- "통과" --&gt; PV["previewImage&lt;br/&gt;FileReader dataURL"]
+  CHK -- "실패" --&gt; AL["alert 후 선택 취소"]
+
+  FS --&gt; SUB["제출 · useTransition"]
+  PV --&gt; SUB
+  SUB --&gt; VAL{"필수값 검사"}
+  VAL -- "실패" --&gt; ES["errorState 표시"]
+  VAL -- "통과" --&gt; UP{"썸네일 변경됨?"}
+  UP -- "예" --&gt; CL["Cloudinary 업로드 후 url"]
+  UP -- "아니오" --&gt; MODE
+  CL --&gt; MODE{"수정 모드?"}
+  MODE -- "예" --&gt; PUT["PUT /posts/:id 후 상세로 이동"]
+  MODE -- "아니오" --&gt; POST["POST /posts 후 홈으로 이동"]
+</pre>
+</div>
+</main>
+<footer>코드가 바뀌면 docs/architecture/architecture.md 와 이 파일을 함께 갱신하세요.</footer>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs";
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: dark ? "dark" : "default",
+    securityLevel: "strict",
+    flowchart: { useMaxWidth: false, htmlLabels: true },
+    sequence: { useMaxWidth: false },
+  });
+</script>
+</body>
+</html>
