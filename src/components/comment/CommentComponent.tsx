@@ -3,49 +3,52 @@ import { Trash } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 
 export default function CommentComponent({
-  _id, 
-  author, 
-  content, 
+  _id,
+  author,
+  content,
   createdAt,
-  deleteComment
-} : Comment & {
-  deleteComment:(id:string) => void;
+  deleteComment,
+}: Comment & {
+  deleteComment: (id: string) => void;
 }) {
-
-  const user = useAuthStore((state) => state.user)
-
+  const user = useAuthStore((state) => state.user);
 
   return (
-    <div className="mb-6">
-      <div className="flex gap-4">
-        <img
-          alt={author.nickname}
-          className="w-10 h-10 rounded-full"
-          src={author.profileImage}
-        />
-        <div className="flex-1">
-          <div className="bg-slate-800 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-white">{author.nickname}</span>
-              <span className="text-sm text-gray-400">{format(new Date(createdAt),"yyyy-MM-dd HH:mm")}</span>
-            </div>
-            <p className="text-gray-300">
-              {content}
-            </p>
+    <li className="flex gap-4">
+      <img
+        alt=""
+        className="h-10 w-10 shrink-0 rounded-full object-cover"
+        src={author.profileImage}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="rounded-xl bg-card p-4">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <span className="font-medium text-white">{author.nickname}</span>
+            <time
+              dateTime={new Date(createdAt).toISOString()}
+              className="text-sm text-muted"
+            >
+              {format(new Date(createdAt), "yyyy-MM-dd HH:mm")}
+            </time>
           </div>
-          {author._id === user?.id && (
-            <div className="flex items-center gap-4 mt-2">
-              <button className="flex items-center gap-1 text-sm text-gray-400 hover:text-blue-400 transition-colors"
-                onClick={() => deleteComment(_id)}
-              >
-                <Trash className="w-4 h-4" aria-hidden="true" />
-                삭제
-              </button>
-            </div>
-          )}
-          
+          <p className="whitespace-pre-wrap break-words text-slate-300">
+            {content}
+          </p>
         </div>
+        {author._id === user?.id && (
+          <div className="mt-1 flex items-center gap-4">
+            <button
+              type="button"
+              aria-label={`${author.nickname}님의 댓글 삭제`}
+              className="flex min-h-11 items-center gap-1 text-sm text-muted transition-colors hover:text-accent-hover"
+              onClick={() => deleteComment(_id)}
+            >
+              <Trash className="h-4 w-4" aria-hidden="true" />
+              삭제
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </li>
   );
 }
