@@ -1,141 +1,101 @@
-import { Mail, Lock, Eye } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useState } from "react";
 import { axiosInstance } from "../../../api/axios";
 import { useAuthStore } from "../../../store/authStore";
 import { useNavigate } from "react-router";
+import AuthCard from "../../../components/auth/AuthCard";
+import AuthField from "../../../components/auth/AuthField";
 
 export default function EmailLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("")
-  const [isShowPassword, setIsShowPassword] = useState(false);
+  const [error, setError] = useState("");
 
-  const setUserData = useAuthStore((state) => state.setUserData)
+  const setUserData = useAuthStore((state) => state.setUserData);
 
   const handleLogin = async () => {
     setError("");
     try {
-      if(email.trim() ==="") {
+      if (email.trim() === "") {
         setError("Email Required");
         return;
       }
-      if(password.trim().length <6) {
-        setError("Password must e at least 6 characters long")
+      if (password.trim().length < 6) {
+        setError("Password must be at least 6 characters long");
         return;
-      } 
-
-      const {data:{accessToken, user}} = await axiosInstance.post("/auth/login",{
-        email,
-        password
-      })
-
-      const userData = {
-        id:user._id,
-        kakaoId:user.kakaoId,
-        profileImage:user.profileImage,
-        nickname:user.nickname,
-        email:user.email
       }
 
-      sessionStorage.setItem("access_token",accessToken)
-      setUserData(userData);
-      navigate("/")
-    } catch(e) {
-      setError(e instanceof Error ? e.message : "unknow error");
-    }
-  }
+      const {
+        data: { accessToken, user },
+      } = await axiosInstance.post("/auth/login", {
+        email,
+        password,
+      });
 
+      const userData = {
+        id: user._id,
+        kakaoId: user.kakaoId,
+        profileImage: user.profileImage,
+        nickname: user.nickname,
+        email: user.email,
+      };
+
+      sessionStorage.setItem("access_token", accessToken);
+      setUserData(userData);
+      navigate("/");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "unknown error");
+    }
+  };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-slate-800 rounded-lg shadow-xl p-8">
-          {/* 헤더 */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Welcome to SULOG
-            </h1>
-            <p className="text-gray-400">
-              Please enter your credentials to continue
-            </p>
-          </div>
+    <AuthCard
+      title="Welcome to SULOG"
+      description="Please enter your credentials to continue"
+      error={error}
+    >
+      <title>Email Login - Blog</title>
+      <form className="space-y-4" action={handleLogin}>
+        <AuthField
+          id="email"
+          type="email"
+          label="Email Address"
+          icon={Mail}
+          placeholder="Enter your email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-          {/* 에러 */}
-          {error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-            <p className="text-red-500 text-sm">
-              {error}
-            </p>
-          </div> }
+        <AuthField
+          id="password"
+          type="password"
+          label="Password"
+          icon={Lock}
+          showToggle
+          placeholder="Enter your password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <form className="space-y-4" action={handleLogin}>
-            {/* 이메일 입력 */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="email"
-                  id="email"
-                  className="w-full bg-slate-700 text-white pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Enter your email"                  
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* 비밀번호 입력 */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type={isShowPassword ?"text" : "password"}
-                  id="password"
-                  className="w-full bg-slate-700 text-white pl-10 pr-12 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Enter your password"                  
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                  onClick ={() => setIsShowPassword((show)=> !show)}
-                >
-                  <Eye className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 버튼 */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Sign In
-              </button>
-            </div>
-          </form>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            className="min-h-11 flex-1 rounded-lg bg-slate-600 py-3 text-white transition-colors hover:bg-slate-500"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            className="min-h-11 flex-1 rounded-lg bg-accent py-3 text-white transition-colors hover:bg-accent-hover"
+          >
+            Sign In
+          </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </AuthCard>
   );
 }
