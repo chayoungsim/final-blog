@@ -5,8 +5,10 @@ const buttonClass =
 
 export default function PostZero({
   selectedCategory,
+  onShowAll,
 }: {
   selectedCategory: string;
+  onShowAll?: () => void;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-xl">
@@ -24,7 +26,7 @@ export default function PostZero({
           : `We couldn't find any posts in the "${selectedCategory}" category.`}
       </p>
       {selectedCategory !== "" ? (
-        <button type="button" className={buttonClass}>
+        <button type="button" onClick={onShowAll} className={buttonClass}>
           <RefreshCw aria-hidden="true" className="w-4 h-4" />
           Show all posts
         </button>
