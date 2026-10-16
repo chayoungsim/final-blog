@@ -1,5 +1,5 @@
 import { Mail, Lock, User } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { axiosInstance } from "../../../api/axios";
 import { useNavigate } from "react-router";
 import AuthCard from "../../../components/auth/AuthCard";
@@ -8,7 +8,10 @@ import AuthField from "../../../components/auth/AuthField";
 export default function Signup() {
   const navigate = useNavigate();
   const [state, formAction, isPending] = useActionState(
-    async (_: { error: string; payload: FormData }, formData: FormData) => {
+    async (
+      _: { error: string; payload: FormData; field?: string },
+      formData: FormData,
+    ) => {
       try {
         const email = (formData.get("email") as string) || "";
         const nickname = (formData.get("nickname") as string) || "";
@@ -18,17 +21,22 @@ export default function Signup() {
 
         // 간단하게 입력양식 검사
         if (email.trim() === "")
-          return { error: "Email is required", payload: formData };
+          return { error: "Email is required", field: "email", payload: formData };
         if (nickname.trim() === "")
-          return { error: "Nickname is required", payload: formData };
+          return { error: "Nickname is required", field: "nickname", payload: formData };
 
         if (password.trim().length < 6)
           return {
             error: "Password must be at least 6 characters long",
+            field: "password",
             payload: formData,
           };
         if (password !== confirmPassword)
-          return { error: "Passwords do not match", payload: formData };
+          return {
+            error: "Passwords do not match",
+            field: "confirmPassword",
+            payload: formData,
+          };
 
         const { status } = await axiosInstance.post("/auth/signup", {
           email,
@@ -52,8 +60,17 @@ export default function Signup() {
     {
       error: "",
       payload: new FormData(),
-    },
+    } as { error: string; payload: FormData; field?: string },
   );
+
+  // 검증 실패 시 오류가 있는 필드로 포커스를 옮긴다
+  useEffect(() => {
+    if (state.field) document.getElementById(state.field)?.focus();
+  }, [state]);
+
+  // 해당 필드의 오류만 골라서 전달한다
+  const fieldError = (name: string) =>
+    state.field === name ? state.error : "";
 
   // 에러로 폼이 다시 그려질 때 입력값을 유지
   const keep = (name: string) =>
@@ -63,7 +80,7 @@ export default function Signup() {
     <AuthCard
       title="Welcome to SULOG"
       description="Create your account"
-      error={state.error}
+      error={state.field ? "" : state.error}
     >
       <title>Sign Up - Blog</title>
       <form className="space-y-4" action={formAction}>
@@ -75,6 +92,8 @@ export default function Signup() {
           icon={Mail}
           placeholder="Enter your email"
           autoComplete="email"
+          aria-required="true"
+          error={fieldError("email")}
           defaultValue={keep("email")}
         />
 
@@ -85,6 +104,8 @@ export default function Signup() {
           icon={User}
           placeholder="Choose a nickname"
           autoComplete="nickname"
+          aria-required="true"
+          error={fieldError("nickname")}
           defaultValue={keep("nickname")}
         />
 
@@ -97,6 +118,9 @@ export default function Signup() {
           showToggle
           placeholder="Create a password"
           autoComplete="new-password"
+          aria-required="true"
+          hint="At least 6 characters"
+          error={fieldError("password")}
           defaultValue={keep("password")}
         />
 
@@ -108,6 +132,8 @@ export default function Signup() {
           icon={Lock}
           placeholder="Confirm your password"
           autoComplete="new-password"
+          aria-required="true"
+          error={fieldError("confirmPassword")}
           defaultValue={keep("confirmPassword")}
         />
 
