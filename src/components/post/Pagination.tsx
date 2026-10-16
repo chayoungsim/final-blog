@@ -39,7 +39,6 @@ export default function Pagination({
     <nav aria-label="페이지 이동" className="mt-12 flex flex-wrap justify-center gap-2">
       <button
         type="button"
-        aria-label="이전 페이지"
         className={`${baseButton} px-4`}
         disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
@@ -65,7 +64,6 @@ export default function Pagination({
 
       <button
         type="button"
-        aria-label="다음 페이지"
         className={`${baseButton} px-4`}
         disabled={currentPage === maxPage}
         onClick={() => onPageChange(currentPage + 1)}

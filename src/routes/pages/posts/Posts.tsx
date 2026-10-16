@@ -50,14 +50,14 @@ export default function Posts() {
         <h1 className="text-3xl font-bold text-white">Blog Posts</h1>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="flex items-center gap-2 rounded-lg bg-card px-3">
+          <div className="flex items-center gap-2 rounded-lg bg-card px-3 focus-within:ring-2 focus-within:ring-accent">
             <Filter className="h-4 w-4 text-muted" aria-hidden="true" />
             <label htmlFor="post-category" className="sr-only">
               카테고리
             </label>
             <select
               id="post-category"
-              className="min-h-11 flex-1 bg-transparent text-slate-300 focus:outline-none"
+              className="min-h-11 flex-1 bg-transparent text-slate-300 focus:outline-hidden"
               value={category}
               onChange={(e) => handleCategoryChange(e.target.value)}
             >
