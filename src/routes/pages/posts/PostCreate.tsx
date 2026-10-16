@@ -15,7 +15,7 @@ type FormStateType = {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; //10MB
 
 const fieldClass =
-  "w-full min-h-11 rounded-lg bg-card px-4 py-2.5 text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent aria-invalid:ring-2 aria-invalid:ring-red-400";
+  "w-full min-h-11 rounded-lg bg-card px-4 py-2.5 text-white placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent aria-invalid:ring-2 aria-invalid:ring-red-400";
 const labelClass = "mb-2 block text-sm font-medium text-slate-300";
 const errorClass = "mt-1 text-sm text-red-400";
 

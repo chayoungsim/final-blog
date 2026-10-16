@@ -65,7 +65,7 @@ export default function Header() {
                 placeholder="Search"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                className="w-40 rounded-full bg-card py-2 pl-10 pr-4 text-white placeholder:text-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent md:w-60"
+                className="w-40 rounded-full bg-card py-2 pl-10 pr-4 text-white placeholder:text-muted transition-all focus:outline-hidden focus:ring-2 focus:ring-accent md:w-60"
               />
               <Search
                 aria-hidden="true"

@@ -37,7 +37,7 @@ export default function AuthField({
         <input
           id={id}
           type={showToggle && isShown ? "text" : type}
-          className={`min-h-11 w-full rounded-lg bg-slate-700 py-3 pl-10 text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent ${
+          className={`min-h-11 w-full rounded-lg bg-slate-700 py-3 pl-10 text-white placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent ${
             showToggle ? "pr-12" : "pr-4"
           }`}
           {...inputProps}
