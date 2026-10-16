@@ -9,13 +9,18 @@ export default function AuthProfile() {
   const logout = useAuthStore((state) => state.logout);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // 메뉴가 열려 있을 때 ESC 또는 바깥 클릭으로 닫기
   useEffect(() => {
     if (!isUserMenuOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsUserMenuOpen(false);
+      if (e.key === "Escape") {
+        setIsUserMenuOpen(false);
+        // 메뉴 안에서 포커스가 사라지지 않도록 트리거 버튼으로 복귀
+        triggerRef.current?.focus();
+      }
     };
     const handlePointerDown = (e: PointerEvent) => {
       if (!containerRef.current?.contains(e.target as Node)) {
@@ -34,12 +39,15 @@ export default function AuthProfile() {
   const handleLogout = async () => {
     await logout();
     setIsUserMenuOpen(false);
+    // 로그아웃하면 이 컴포넌트가 사라지므로 본문으로 포커스를 옮긴다
+    document.getElementById("main-content")?.focus();
     revalidate();
   };
 
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label="사용자 메뉴"
         aria-expanded={isUserMenuOpen}
@@ -49,7 +57,7 @@ export default function AuthProfile() {
       >
         <img
           src={user?.profileImage}
-          alt={user?.nickname ? `${user.nickname} 프로필 이미지` : "프로필 이미지"}
+          alt=""
           className="h-8 w-8 rounded-full border-2 border-accent object-cover"
         />
       </button>
