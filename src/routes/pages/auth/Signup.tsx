@@ -1,188 +1,160 @@
-import { Mail, Lock, Eye, User } from "lucide-react";
-import { useActionState, useState } from "react";
+import { Mail, Lock, User } from "lucide-react";
+import { useActionState, useEffect } from "react";
 import { axiosInstance } from "../../../api/axios";
 import { useNavigate } from "react-router";
+import AuthCard from "../../../components/auth/AuthCard";
+import AuthField from "../../../components/auth/AuthField";
 
 export default function Signup() {
   const navigate = useNavigate();
-  const [isShowPassword, setIsShowPassword] = useState(false)
-  const [state, formAction, isPending] = useActionState(async(
-    _:{error:string; payload:FormData},
-    formData : FormData
-  ) => {
-    try {
-    const email = (formData.get("email") as string) || "";
-    const nickname = (formData.get("nickname") as string) || "";
-    const password = (formData.get("password") as string) || "";
-    const confirmPassword = (formData.get("confirmPassword") as string) || "";
+  const [state, formAction, isPending] = useActionState(
+    async (
+      _: { error: string; payload: FormData; field?: string },
+      formData: FormData,
+    ) => {
+      try {
+        const email = (formData.get("email") as string) || "";
+        const nickname = (formData.get("nickname") as string) || "";
+        const password = (formData.get("password") as string) || "";
+        const confirmPassword =
+          (formData.get("confirmPassword") as string) || "";
 
-    // 간단하게 입력양식 검사
-    if(email.trim() === "")
-      return {error: "Email is required", payload: formData}
-    if(nickname.trim() ==="")
-      return {error: "Nickname is required", payload:formData}
+        // 간단하게 입력양식 검사
+        if (email.trim() === "")
+          return { error: "Email is required", field: "email", payload: formData };
+        if (nickname.trim() === "")
+          return { error: "Nickname is required", field: "nickname", payload: formData };
 
-    if(password.trim().length < 6)
-      return {
-        error: "Password must be at least 6 characters long",
-        payload: formData
+        if (password.trim().length < 6)
+          return {
+            error: "Password must be at least 6 characters long",
+            field: "password",
+            payload: formData,
+          };
+        if (password !== confirmPassword)
+          return {
+            error: "Passwords do not match",
+            field: "confirmPassword",
+            payload: formData,
+          };
+
+        const { status } = await axiosInstance.post("/auth/signup", {
+          email,
+          password,
+          nickname,
+        });
+
+        if (status === 201) {
+          alert("회원가입 완료했습니다.");
+          navigate("/auth/email-login");
+          return { error: "", payload: formData };
+        }
+        return { error: "Signup failed", payload: formData };
+      } catch (e) {
+        return {
+          error: e instanceof Error ? e.message : "unknown error",
+          payload: formData,
+        };
       }
-    if(password !== confirmPassword) return {error:"Passwords do not match", payload: formData}  
+    },
+    {
+      error: "",
+      payload: new FormData(),
+    } as { error: string; payload: FormData; field?: string },
+  );
 
-    const {status} = await axiosInstance.post("/auth/signup",{
-      email,
-      password,
-      nickname
-    })
+  // 검증 실패 시 오류가 있는 필드로 포커스를 옮긴다
+  useEffect(() => {
+    if (state.field) document.getElementById(state.field)?.focus();
+  }, [state]);
 
-    if(status === 201) {
-      alert("회원가입 완료했습니다.")
-      navigate("/auth/email-login")
-    }
-    return {error:"Signup failed",payload:formData}
+  // 해당 필드의 오류만 골라서 전달한다
+  const fieldError = (name: string) =>
+    state.field === name ? state.error : "";
 
-    } catch (e) {
-      return {
-        error: e instanceof Error ? e.message : "unknow error",
-        payload:formData
-      }
-    }
-
-  },{
-    error:"",
-    payload: new FormData(),
-  })
+  // 에러로 폼이 다시 그려질 때 입력값을 유지
+  const keep = (name: string) =>
+    state.error ? String(state.payload?.get(name) ?? "") : "";
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-slate-800 rounded-lg shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Welcome to SULOG
-            </h1>
-            <p className="text-gray-400">Create your account</p>
-          </div>
+    <AuthCard
+      title="Welcome to SULOG"
+      description="Create your account"
+      error={state.field ? "" : state.error}
+    >
+      <title>Sign Up - Blog</title>
+      <form className="space-y-4" action={formAction}>
+        <AuthField
+          id="email"
+          name="email"
+          type="email"
+          label="Email Address"
+          icon={Mail}
+          placeholder="Enter your email"
+          autoComplete="email"
+          aria-required="true"
+          error={fieldError("email")}
+          defaultValue={keep("email")}
+        />
 
-          {/* 에러 메시지 예시 */}
-          {state.error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-            <p className="text-red-500 text-sm">
-              {state.error}
-            </p>
-          </div>}
+        <AuthField
+          id="nickname"
+          name="nickname"
+          label="Nickname"
+          icon={User}
+          placeholder="Choose a nickname"
+          autoComplete="nickname"
+          aria-required="true"
+          error={fieldError("nickname")}
+          defaultValue={keep("nickname")}
+        />
 
-          <form className="space-y-4" action={formAction}>
-            {/* 이메일 입력 */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className="w-full bg-slate-700 text-white pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Enter your email"
-                  defaultValue={state.error && String(state.payload?.get("email"))}
-                />
-              </div>
-            </div>
+        <AuthField
+          id="password"
+          name="password"
+          type="password"
+          label="Password"
+          icon={Lock}
+          showToggle
+          placeholder="Create a password"
+          autoComplete="new-password"
+          aria-required="true"
+          hint="At least 6 characters"
+          error={fieldError("password")}
+          defaultValue={keep("password")}
+        />
 
-            {/* 닉네임 입력 */}
-            <div>
-              <label
-                htmlFor="nickname"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Nickname
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  id="nickname"
-                  name="nickname"
-                  className="w-full bg-slate-700 text-white pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Choose a nickname"
-                  defaultValue={state.error && String(state.payload?.get("nickname"))}
-                />
-              </div>
-            </div>
+        <AuthField
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          label="Confirm Password"
+          icon={Lock}
+          placeholder="Confirm your password"
+          autoComplete="new-password"
+          aria-required="true"
+          error={fieldError("confirmPassword")}
+          defaultValue={keep("confirmPassword")}
+        />
 
-            {/* 비밀번호 입력 */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type={isShowPassword ? "text" :"password"}
-                  id="password"
-                  name="password"
-                  className="w-full bg-slate-700 text-white pl-10 pr-12 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Create a password"
-                  defaultValue={state.error && String(state.payload?.get("password"))}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                  onClick={() => setIsShowPassword((show) => !show)}
-                >
-                  <Eye className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 비밀번호 확인 입력 */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  className="w-full bg-slate-700 text-white pl-10 pr-12 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Confirm your password"
-                  defaultValue={state.error && String(state.payload?.get("confirmPassword"))}
-                />
-              </div>
-            </div>
-
-            {/* 버튼 영역 */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                onClick={() => navigate(-1)}
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
-                disabled={isPending}
-              >
-                Create Account
-              </button>
-            </div>
-          </form>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            className="min-h-11 flex-1 rounded-lg bg-slate-600 py-3 text-white transition-colors hover:bg-slate-500"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            className="min-h-11 flex-1 rounded-lg bg-accent-solid py-3 text-white transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-muted"
+            disabled={isPending}
+            aria-busy={isPending}
+          >
+            Create Account
+          </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </AuthCard>
   );
 }

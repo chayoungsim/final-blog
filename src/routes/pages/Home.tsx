@@ -11,6 +11,8 @@ export default function Home() {
   }: { latestPosts: Post[]; popularPosts: Post[]; randomPost: Post } = useLoaderData();
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      {/* randomPost가 없어도 페이지에 h1이 항상 존재하도록 한다 */}
+      <h1 className="sr-only">SULOG 블로그 홈</h1>
       {randomPost && <FeaturedPost post={randomPost} />}
 
       <div className="mt-8">

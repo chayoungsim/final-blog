@@ -19,56 +19,63 @@ const router = createBrowserRouter([
     Component: Default,
     loader: fetchuserData,
     HydrateFallback: FullLoading,
-    errorElement:<ErrorState />,
+    // 레이아웃 자체(loader 등)에서 난 오류는 레이아웃 밖에서 단독으로 보여준다
+    errorElement: <ErrorState standalone />,
     children: [
       {
-        path: "",
-        loader:fetchOverview,
-        Component: Home,
-      },
-      {
-        path: "/posts",
-        loader:fetchPosts,
-        Component: Posts,
-      },
-      {
-        path: "/create-post",
-        loader: requireAuth,
-        Component: PostCreate,
-      },
-      {
-        path: "/edit/:id",
-        loader: fetchPostModify,
-        Component: PostCreate,
-      },
-      {
-        path: "/post/:id",     
-        loader : fetchPostsDetail,   
-        Component: PostRead,
-      },
-      {
-        path: "/auth/login",
-        loader: redirectIfAuth,
-        Component: Login,
-      },
-      {
-        path: "/auth/email-login",
-        loader: redirectIfAuth,
-        Component: EmailLogin,
-      },
-      {
-        path: "/auth/signup",
-        loader: redirectIfAuth,
-        Component: Signup,
-      },
-      {
-        path: "/auth/callback/kakao",
-        loader: redirectIfAuth,
-        Component: Kakao,
-      },
-      {
-        path: "*",
-        Component: NotFoundPage,
+        // 자식 라우트 오류는 Header/Footer가 유지되는 레이아웃 안에서 보여준다
+        errorElement: <ErrorState />,
+        children: [
+          {
+            path: "",
+            loader:fetchOverview,
+            Component: Home,
+          },
+          {
+            path: "/posts",
+            loader:fetchPosts,
+            Component: Posts,
+          },
+          {
+            path: "/create-post",
+            loader: requireAuth,
+            Component: PostCreate,
+          },
+          {
+            path: "/edit/:id",
+            loader: fetchPostModify,
+            Component: PostCreate,
+          },
+          {
+            path: "/post/:id",
+            loader : fetchPostsDetail,
+            Component: PostRead,
+          },
+          {
+            path: "/auth/login",
+            loader: redirectIfAuth,
+            Component: Login,
+          },
+          {
+            path: "/auth/email-login",
+            loader: redirectIfAuth,
+            Component: EmailLogin,
+          },
+          {
+            path: "/auth/signup",
+            loader: redirectIfAuth,
+            Component: Signup,
+          },
+          {
+            path: "/auth/callback/kakao",
+            loader: redirectIfAuth,
+            Component: Kakao,
+          },
+          {
+            path: "*",
+            Component: NotFoundPage,
+          },
+        ],
       },
     ],
   },

@@ -1,29 +1,43 @@
 import { FileQuestion } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 
 export default function NotFoundPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
-        <div className="bg-blue-100 dark:bg-blue-900/20 rounded-full p-6 inline-flex mb-6">
-          <FileQuestion className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+    <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
+      <title>404 Page Not Found - Blog</title>
+      <div className="w-full max-w-md text-center">
+        <div className="mb-6 inline-flex rounded-full bg-blue-900/20 p-6">
+          <FileQuestion
+            aria-hidden="true"
+            className="h-12 w-12 text-accent-hover"
+          />
         </div>
-        <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-4">
-          404
+        <h1 className="mb-4 text-3xl font-bold text-white">
+          <span className="block text-6xl">404</span>
+          <span className="mt-2 block text-2xl font-semibold text-slate-200">
+            Page Not Found
+          </span>
         </h1>
-        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-          Page Not Found
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
+        <p className="mb-8 text-muted">
           The page you are looking for might have been removed, had its name
           changed, or is temporarily unavailable.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-6 py-3 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
+          <button
+            type="button"
+            className="min-h-11 rounded-lg bg-slate-700 px-6 py-3 text-white transition-colors hover:bg-slate-600"
+            onClick={() => navigate(-1)}
+          >
             Go Back
           </button>
-          <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <Link
+            to="/"
+            className="flex min-h-11 items-center justify-center rounded-lg bg-accent-solid px-6 py-3 text-white transition-colors hover:bg-accent-solid-hover"
+          >
             Go Home
-          </button>
+          </Link>
         </div>
       </div>
     </div>
