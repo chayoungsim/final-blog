@@ -39,7 +39,7 @@ export default function Kakao() {
         // 서버가 내려준 메시지를 우선 표시
         setError(e.response?.data?.error ?? e.message);
       } else {
-        setEmail(e instanceof Error ? e.message : "unknown error");
+        setError(e instanceof Error ? e.message : "unknown error");
       }
     }
   }
@@ -53,7 +53,10 @@ export default function Kakao() {
         navigate("/")
         //console.log(data)
     } catch (e) {
-      setEmail(e instanceof Error ? e.message : "unknown error");
+      // 사용자 정보 조회 실패 시 저장한 토큰을 지우고 로그인 페이지로 이동
+      console.error(e);
+      sessionStorage.removeItem("access_token");
+      navigate("/auth/login", { replace: true });
     }
   },[accessToken,navigate,setUserData])
 
