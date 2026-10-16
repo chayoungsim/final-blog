@@ -68,14 +68,14 @@ export default function PostRead() {
         <article>
           <header>
             <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-              <span className="inline-block rounded-md bg-accent px-3 py-1 text-sm font-semibold text-white">
+              <span className="inline-block rounded-md bg-accent-solid px-3 py-1 text-sm font-semibold text-white">
                 {post.category}
               </span>
               {isAuthor && (
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    className="flex min-h-11 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:bg-accent-hover"
+                    className="flex min-h-11 items-center gap-2 rounded-lg bg-accent-solid px-4 py-2 text-white transition-colors hover:bg-accent-solid-hover"
                     onClick={() => navigate(`/edit/${post._id}`)}
                   >
                     <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -83,7 +83,7 @@ export default function PostRead() {
                   </button>
                   <button
                     type="button"
-                    className="flex min-h-11 items-center gap-2 rounded-lg bg-danger px-4 py-2 text-white transition-colors hover:bg-red-600"
+                    className="flex min-h-11 items-center gap-2 rounded-lg bg-danger px-4 py-2 text-white transition-colors hover:bg-danger-hover"
                     onClick={() => setShowDeleteConfirm(true)}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />

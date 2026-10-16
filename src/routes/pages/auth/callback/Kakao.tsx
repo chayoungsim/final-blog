@@ -103,7 +103,7 @@ export default function Kakao() {
               </button>
               <button
                 type="submit"
-                className="min-h-11 flex-1 rounded-lg bg-accent py-3 text-white transition-colors hover:bg-accent-hover"
+                className="min-h-11 flex-1 rounded-lg bg-accent-solid py-3 text-white transition-colors hover:bg-accent-solid-hover"
               >
                 Continue
               </button>

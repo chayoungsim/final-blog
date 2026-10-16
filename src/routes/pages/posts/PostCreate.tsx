@@ -246,7 +246,7 @@ export default function PostCreate() {
               <button
                 type="button"
                 aria-label="이미지 제거"
-                className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-danger text-white transition-colors hover:bg-red-600"
+                className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-danger text-white transition-colors hover:bg-danger-hover"
                 onClick={() => setPreviewImage("")}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -326,7 +326,7 @@ export default function PostCreate() {
             type="submit"
             disabled={isPending}
             aria-busy={isPending}
-            className="flex min-h-11 items-center justify-center rounded-lg bg-accent px-6 py-2.5 font-medium text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-11 items-center justify-center rounded-lg bg-accent-solid px-6 py-2.5 font-medium text-white transition-colors hover:bg-accent-solid-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <>

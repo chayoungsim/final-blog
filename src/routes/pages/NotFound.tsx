@@ -34,7 +34,7 @@ export default function NotFoundPage() {
           </button>
           <Link
             to="/"
-            className="flex min-h-11 items-center justify-center rounded-lg bg-accent px-6 py-3 text-white transition-colors hover:bg-accent-hover"
+            className="flex min-h-11 items-center justify-center rounded-lg bg-accent-solid px-6 py-3 text-white transition-colors hover:bg-accent-solid-hover"
           >
             Go Home
           </Link>

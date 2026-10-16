@@ -81,7 +81,7 @@ export default function Posts() {
                 aria-pressed={sort === value}
                 className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 transition-colors ${
                   sort === value
-                    ? "bg-accent text-white"
+                    ? "bg-accent-solid text-white"
                     : "text-slate-300 hover:bg-slate-700"
                 }`}
                 onClick={() => handleSortChange(value)}
