@@ -5,15 +5,7 @@ import Pagination from "../../../components/post/Pagination";
 
 import { useLoaderData, useSearchParams } from "react-router";
 import PostZero from "../../../components/post/PostZero";
-
-const categories = [
-  "Technology",
-  "Lifestyle",
-  "Travel",
-  "Business",
-  "Economy",
-  "Sports",
-];
+import { categories } from "../../../constants/categories";
 
 const sortOptions = [
   { value: "newest", label: "Latest", Icon: Clock },
