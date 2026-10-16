@@ -95,7 +95,7 @@ export default function CommentForm({
           <div className="mt-2 flex justify-end">
             <button
               type="submit"
-              className="flex min-h-11 items-center gap-2 rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:bg-accent-hover"
+              className="flex min-h-11 items-center gap-2 rounded-lg bg-accent-solid px-4 py-2 text-white transition-colors hover:bg-accent-solid-hover"
             >
               <Send className="h-4 w-4" aria-hidden="true" />
               Comment

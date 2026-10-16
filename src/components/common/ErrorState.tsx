@@ -45,7 +45,7 @@ export default function ErrorState({
           <button
             type="button"
             onClick={action.onClick}
-            className="min-h-11 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
+            className="min-h-11 px-6 py-3 bg-accent-solid text-white rounded-lg hover:bg-accent-solid-hover transition-colors"
           >
             {action.label}
           </button>

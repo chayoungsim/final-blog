@@ -53,7 +53,7 @@ export default function Pagination({
           aria-current={page === currentPage ? "page" : undefined}
           className={
             page === currentPage
-              ? "h-11 w-11 rounded-lg bg-accent font-semibold text-white"
+              ? "h-11 w-11 rounded-lg bg-accent-solid font-semibold text-white"
               : `${baseButton} w-11`
           }
           onClick={() => onPageChange(page)}

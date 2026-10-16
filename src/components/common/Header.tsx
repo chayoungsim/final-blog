@@ -78,7 +78,7 @@ export default function Header() {
             <Link
               to="/create-post"
               aria-label="글쓰기"
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-accent transition-colors hover:bg-accent-hover"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-solid transition-colors hover:bg-accent-solid-hover"
             >
               <PenSquare className="h-5 w-5" aria-hidden="true" />
             </Link>

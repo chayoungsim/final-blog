@@ -17,7 +17,7 @@ export default function PostMainZero({ title }: { title: string }) {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="flex min-h-11 items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors"
+          className="flex min-h-11 items-center gap-2 px-6 py-3 bg-accent-solid text-white rounded-lg hover:bg-accent-solid-hover transition-colors"
         >
           <RefreshCw aria-hidden="true" className="w-4 h-4" />
           Refresh page

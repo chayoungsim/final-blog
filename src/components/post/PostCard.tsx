@@ -23,7 +23,7 @@ export default function PostCard({
             src={thumbnail}
           />
         </Link>
-        <span className="absolute top-3 left-3 rounded-md bg-accent px-2.5 py-1 text-xs font-semibold text-white">
+        <span className="absolute top-3 left-3 rounded-md bg-accent-solid px-2.5 py-1 text-xs font-semibold text-white">
           {category}
         </span>
       </div>

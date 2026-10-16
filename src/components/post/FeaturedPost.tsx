@@ -12,7 +12,7 @@ export default function FeaturedPost({post}: {post:Post}) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
         <div className="mb-4">
-          <span className="bg-blue-500 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+          <span className="bg-accent-solid text-white text-xs font-semibold px-2.5 py-1 rounded-md">
             {post.category}
           </span>
         </div>
